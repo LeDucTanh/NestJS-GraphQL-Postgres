@@ -1,6 +1,6 @@
 import { JwtAuthGuard } from './../jwt/jwt.guard';
 import { User } from './entities/user.entity';
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
 import { UsersService } from './users.service';
 import {
   CreateAccountInPut,
@@ -8,6 +8,7 @@ import {
 } from './dtos/createAccount.dto';
 import { LoginInput, LoginOutPut } from './dtos/login.dto';
 import { UseGuards } from '@nestjs/common';
+import { CurrentUser } from './users.decorator';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -15,7 +16,8 @@ export class UsersResolver {
 
   @Query(() => [User])
   @UseGuards(JwtAuthGuard)
-  users(): [] {
+  users(@CurrentUser() user: User): [] {
+    console.log(`user: ${user.username}`);
     return [];
   }
 

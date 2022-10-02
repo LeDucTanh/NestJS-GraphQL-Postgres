@@ -31,7 +31,7 @@ import { JwtModule } from './jwt/jwt.module';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: true, //join(process.cwd(), 'src/schema.gql'),
-      // context: ({ req }) => ({ user: req['user'] }),
+      context: ({ req }) => ({ req }),
     }),
     UsersModule,
     CommonModule,

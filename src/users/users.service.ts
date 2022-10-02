@@ -84,4 +84,8 @@ export class UsersService {
       return { ok: false, error: 'User Not Found' };
     }
   }
+
+  async findBy(id: number): Promise<User> {
+    return await this.users.findOneBy({ id });
+  }
 }
