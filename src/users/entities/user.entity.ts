@@ -1,7 +1,8 @@
+import { News } from './../../news/entities/news.entity';
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import * as bcrypt from 'bcrypt';
 import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany } from 'typeorm';
-import { IsBoolean, IsEmail, IsEnum, IsString } from 'class-validator';
+import { IsEmail, IsString } from 'class-validator';
 import { CoreEntity } from 'src/common/entities/core.entity';
 import { InternalServerErrorException } from '@nestjs/common';
 // import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
@@ -25,9 +26,9 @@ export class User extends CoreEntity {
   @IsString()
   password: string;
 
-  //   @Field(() => [Restaurant])
-  //   @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)
-  //   restaurants: Restaurant[];
+  @Field(() => [News])
+  @OneToMany(() => News, (news) => news.publisher)
+  news: News[];
 
   @BeforeInsert()
   @BeforeUpdate()
