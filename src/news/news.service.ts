@@ -1,28 +1,119 @@
-import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { CoreOutPut } from 'src/common/dtos/output.dto';
+import { User } from 'src/users/entities/user.entity';
 import { CreateNewsInput } from './dto/create-news.input';
-import { UpdateNewsInput } from './dto/update-news.input';
-import { NewsRepository } from './news.repository';
+import { News } from './entities/news.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PaginatedNews } from './types/paginatedNews';
 
 @Injectable()
 export class NewsService {
-  constructor(private readonly news: NewsRepository) {}
-  create(createNewsInput: CreateNewsInput) {
-    return 'This action adds a new news';
+  constructor(
+    @InjectRepository(News)
+    private readonly newsRepository: Repository<News>,
+  ) {}
+
+  async findAll(page: number, limit: number): Promise<PaginatedNews> {
+    const [news, total] = await this.newsRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+
+    return { data: news, total };
   }
 
-  findAll() {
-    return `This action returns all news`;
+  async findMyNews(
+    currentUserId: number,
+    page: number,
+    limit: number,
+  ): Promise<PaginatedNews> {
+    const queryBuilder = this.newsRepository
+      .createQueryBuilder('news')
+      .leftJoinAndSelect('news.publisher', 'publisher');
+
+    queryBuilder.andWhere('news.publisherId = :id', {
+      id: currentUserId,
+    });
+    const count = await queryBuilder.getCount();
+
+    queryBuilder.limit(limit);
+    queryBuilder.offset((page - 1) * limit);
+
+    const news = await queryBuilder.getMany();
+    return { data: news, total: count };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} news`;
+  async createNews(
+    owner: User,
+    createNewsInput: CreateNewsInput,
+  ): Promise<CoreOutPut> {
+    try {
+      const news = new News();
+      // console.log(`news: ${JSON.stringify(news)}`);
+      Object.assign(news, createNewsInput);
+      // const category = await this.categories.getOrCreate(
+      //   createRestaurantInput.categoryName,
+      // );
+      // newRestaurant.category = category;
+      news.publisher = owner;
+      await this.newsRepository.save(news); // save on DB
+      return {
+        ok: true,
+      };
+    } catch (e) {
+      console.log(e);
+      return {
+        ok: false,
+        error: 'Could not create news',
+      };
+    }
   }
 
-  update(id: number, updateNewsInput: UpdateNewsInput) {
-    return `This action updates a #${id} news`;
+  async updateNews(
+    id: number,
+    updateNewsInput: CreateNewsInput,
+    currentUserId: number,
+  ): Promise<News> {
+    const article = await this.finById(id);
+
+    if (!article) {
+      throw new HttpException('News does not exist', HttpStatus.NOT_FOUND);
+    }
+
+    if (article.publisher.id !== currentUserId) {
+      throw new HttpException('You are not an author', HttpStatus.FORBIDDEN);
+    }
+
+    Object.assign(article, updateNewsInput);
+
+    return await this.newsRepository.save(article);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} news`;
+  async deleteNews(id: number, currentUserId: number): Promise<CoreOutPut> {
+    const article = await this.finById(id);
+
+    if (!article) {
+      return {
+        ok: false,
+        error: 'News does not exist',
+      };
+    }
+
+    if (article.publisher.id !== currentUserId) {
+      return {
+        ok: false,
+        error: 'You are not an author',
+      };
+    }
+
+    await this.newsRepository.delete({ id });
+    return {
+      ok: true,
+    };
+  }
+
+  async finById(id: number): Promise<News> {
+    return await this.newsRepository.findOne({ where: { id } });
   }
 }

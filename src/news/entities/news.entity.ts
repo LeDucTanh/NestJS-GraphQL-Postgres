@@ -27,8 +27,9 @@ export class News extends CoreEntity {
   // category: Category;
 
   @Field(() => User)
-  @ManyToOne(() => User, (user) => user.news, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => User, (user) => user.news, { eager: true })
   publisher: User;
+
+  // @RelationId((news: News) => news.publisher)
+  // publisherId: number;
 }
