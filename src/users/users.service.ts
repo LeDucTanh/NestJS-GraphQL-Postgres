@@ -1,3 +1,4 @@
+import { CoreOutPut } from './../common/dtos/output.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,11 +16,15 @@ export class UsersService {
     private readonly jwtService: JwtService,
   ) {}
 
+  async listUser(): Promise<User[]> {
+    return this.users.find();
+  }
+
   async createAccount({
     username,
     email,
     password,
-  }: CreateAccountInPut): Promise<{ ok: boolean; error?: string }> {
+  }: CreateAccountInPut): Promise<CoreOutPut> {
     try {
       const exists = await this.users.findOne({
         where: [{ username }, { email }],

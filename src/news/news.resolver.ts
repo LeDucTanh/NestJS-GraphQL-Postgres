@@ -1,9 +1,8 @@
-import { PaginatedNews } from './types/paginatedNews';
+import { PaginatedNews } from '../common/dtos/paginatedNews.dto';
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
 import { NewsService } from './news.service';
 import { News } from './entities/news.entity';
 import { CreateNewsInput } from './dto/create-news.input';
-import { UpdateNewsInput } from './dto/update-news.input';
 import { JwtAuthGuard } from 'src/jwt/jwt.guard';
 import { UseGuards } from '@nestjs/common';
 import { CurrentUser } from 'src/users/users.decorator';
@@ -15,7 +14,6 @@ export class NewsResolver {
   constructor(private readonly newsService: NewsService) {}
 
   @Query(() => PaginatedNews)
-  // @UseGuards(JwtAuthGuard)
   findAll(@Args('page') page: number, @Args('limit') limit: number) {
     return this.newsService.findAll(page, limit);
   }
@@ -28,6 +26,20 @@ export class NewsResolver {
     @Args('limit') limit: number,
   ) {
     return this.newsService.findMyNews(user.id, page, limit);
+  }
+
+  @Query(() => PaginatedNews)
+  searchNews(
+    @Args('keyWord') keyWord: string,
+    @Args('page') page: number,
+    @Args('limit') limit: number,
+  ) {
+    return this.newsService.searchNews(keyWord, page, limit);
+  }
+
+  @Query(() => News)
+  getDetailNews(@Args('id') id: number) {
+    return this.newsService.getDetailNews(id);
   }
 
   @Mutation(() => CoreOutPut)
@@ -54,9 +66,4 @@ export class NewsResolver {
   deleteNews(@CurrentUser() user: User, @Args('id') id: number) {
     return this.newsService.deleteNews(id, user.id);
   }
-
-  // @Mutation(() => News)
-  // removeNews(@Args('id', { type: () => Int }) id: number) {
-  //   return this.newsService.remove(id);
-  // }
 }

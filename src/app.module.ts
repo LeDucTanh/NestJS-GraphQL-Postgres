@@ -11,6 +11,8 @@ import { CommonModule } from './common/common.module';
 import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
 import { NewsModule } from './news/news.module';
+import { CategoryModule } from './category/category.module';
+import { Category } from './category/entities/category.entity';
 
 @Module({
   imports: [
@@ -35,7 +37,7 @@ import { NewsModule } from './news/news.module';
       synchronize: process.env.NODE_ENV !== 'prod',
       logging:
         process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test',
-      entities: [User, News],
+      entities: [User, News, Category],
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -48,6 +50,7 @@ import { NewsModule } from './news/news.module';
       privateKey: process.env.SECRET_KEY,
     }),
     NewsModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

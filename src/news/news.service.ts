@@ -1,17 +1,20 @@
-import { Repository } from 'typeorm';
+import { Repository, Raw } from 'typeorm';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CoreOutPut } from 'src/common/dtos/output.dto';
 import { User } from 'src/users/entities/user.entity';
 import { CreateNewsInput } from './dto/create-news.input';
 import { News } from './entities/news.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaginatedNews } from './types/paginatedNews';
+import { PaginatedNews } from '../common/dtos/paginatedNews.dto';
+import { CategoryService } from 'src/category/category.service';
+import { CreateCategoryInput } from 'src/category/dto/create-category.input';
 
 @Injectable()
 export class NewsService {
   constructor(
     @InjectRepository(News)
     private readonly newsRepository: Repository<News>,
+    private readonly categoryService: CategoryService,
   ) {}
 
   async findAll(page: number, limit: number): Promise<PaginatedNews> {
@@ -44,6 +47,35 @@ export class NewsService {
     return { data: news, total: count };
   }
 
+  async searchNews(
+    keyWord: string,
+    page: number,
+    limit: number,
+  ): Promise<PaginatedNews> {
+    const [news, total] = await this.newsRepository.findAndCount({
+      where: [
+        {
+          title: Raw((title) => `${title} ILIKE '%${keyWord}%'`),
+        },
+        {
+          content: Raw((content) => `${content} ILIKE '%${keyWord}%'`),
+        },
+      ], // send sql query directly through Raw
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+
+    return { data: news, total };
+  }
+
+  async getDetailNews(id: number): Promise<News> {
+    const news = this.finById(id);
+    if (!news) {
+      throw new HttpException('News does not exist', HttpStatus.NOT_FOUND);
+    }
+    return news;
+  }
+
   async createNews(
     owner: User,
     createNewsInput: CreateNewsInput,
@@ -52,10 +84,10 @@ export class NewsService {
       const news = new News();
       // console.log(`news: ${JSON.stringify(news)}`);
       Object.assign(news, createNewsInput);
-      // const category = await this.categories.getOrCreate(
-      //   createRestaurantInput.categoryName,
-      // );
-      // newRestaurant.category = category;
+      const category = await this.categoryService.getOrCreateCat({
+        name: createNewsInput.catName,
+      });
+      news.category = category;
       news.publisher = owner;
       await this.newsRepository.save(news); // save on DB
       return {

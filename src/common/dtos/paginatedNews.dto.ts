@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { News } from '../entities/news.entity';
+import { News } from '../../news/entities/news.entity';
 
 @ObjectType()
 export class PaginatedNews {

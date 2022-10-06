@@ -15,10 +15,8 @@ export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
 
   @Query(() => [User])
-  @UseGuards(JwtAuthGuard)
-  users(@CurrentUser() user: User): [] {
-    console.log(`user: ${user.username}`);
-    return [];
+  listUser() {
+    return this.usersService.listUser();
   }
 
   @Mutation(() => CreateAccountOutPut)

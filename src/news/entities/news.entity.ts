@@ -3,6 +3,7 @@ import { Column, Entity, ManyToOne, OneToMany, RelationId } from 'typeorm';
 import { IsString, Length } from 'class-validator';
 import { CoreEntity } from 'src/common/entities/core.entity';
 import { User } from 'src/users/entities/user.entity';
+import { Category } from 'src/category/entities/category.entity';
 
 @InputType('NewsInputType', { isAbstract: true })
 @ObjectType()
@@ -19,12 +20,12 @@ export class News extends CoreEntity {
   @IsString()
   content: string;
 
-  // @Field(() => Category, { nullable: true })
-  // @ManyToOne(() => Category, (category) => category.restaurants, {
-  //   nullable: true,
-  //   onDelete: 'SET NULL',
-  // })
-  // category: Category;
+  @Field(() => Category, { nullable: true })
+  @ManyToOne(() => Category, (category) => category.listNews, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  category: Category;
 
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.news, { eager: true })
