@@ -1,5 +1,13 @@
 import { PaginatedNews } from '../common/dtos/paginatedNews.dto';
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  Int,
+  ResolveField,
+  Parent,
+} from '@nestjs/graphql';
 import { NewsService } from './news.service';
 import { News } from './entities/news.entity';
 import { CreateNewsInput } from './dto/create-news.input';
@@ -8,10 +16,22 @@ import { UseGuards } from '@nestjs/common';
 import { CurrentUser } from 'src/users/users.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { CoreOutPut } from 'src/common/dtos/output.dto';
+import { UsersService } from 'src/users/users.service';
+import { NewsLoader } from './loaders/news.loader';
 
 @Resolver(() => News)
 export class NewsResolver {
-  constructor(private readonly newsService: NewsService) {}
+  constructor(
+    private readonly newsService: NewsService,
+    private readonly usersService: UsersService,
+    private readonly newsLoader: NewsLoader,
+  ) {}
+
+  @ResolveField(() => User)
+  async publisher(@Parent() news: News): Promise<User> {
+    return this.newsLoader.batchPublishers.load(news.publisherId);
+    // return this.usersService.findBy(news.publisherId);
+  }
 
   @Query(() => PaginatedNews)
   findAll(@Args('page') page: number, @Args('limit') limit: number) {

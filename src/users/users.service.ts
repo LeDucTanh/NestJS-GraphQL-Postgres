@@ -1,7 +1,7 @@
 import { CoreOutPut } from './../common/dtos/output.dto';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateAccountInPut } from './dtos/createAccount.dto';
 import { LoginInput } from './dtos/login.dto';
@@ -92,5 +92,9 @@ export class UsersService {
 
   async findBy(id: number): Promise<User> {
     return await this.users.findOneBy({ id });
+  }
+
+  async findByIds(ids: number[]): Promise<User[]> {
+    return await this.users.findBy({ id: In(ids) });
   }
 }
